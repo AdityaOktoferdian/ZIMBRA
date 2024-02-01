@@ -1,0 +1,64 @@
+For backup mailbox, i am usually using zmmailbox command who has been provided by Zimbra. The command usually will backup all mailbox on the users. But in this case, i want to backup mailbox daily, weekly, monthly or by certain time/date. For to do that, i could using the simple script and execute every night by crontab.
+
+# Make file backup-mailbox.sh in /srv directory
+
+view sourceprint?
+1.
+vi /srv/backup-mailbox.sh
+Fill with the following line
+
+##!/bin/bash
+clear
+
+## Backup Format 
+FORMAT=tgz
+
+## Backup location
+ZBACKUP=/srv/backup/
+
+## Folder name for backup and using date
+DATE=`date +"%d%m%y"`
+
+## Backup location separate by date
+ZDUMPDIR=$ZBACKUP/$DATE
+
+## zmmailbox location
+ZMBOX=/opt/zimbra/bin/zmmailbox
+
+### Backup Option ###
+
+## Based on few day ago until today, example 7 days ago
+
+#HARI=`date --date='7 days ago' +"%m/%d/%Y"`
+#query="&query=after:$HARI"
+
+## Based on certain date , example 21 Jan 2015.
+
+#query="&query=date:01/21/2015"
+
+## Based from/to certain date. Example Backup Mailbox before 21 Jan 2015 and after 10 Jan 2015
+
+#query="&query=after:01/10/2015 before:01/21/2015"
+
+if [ ! -d $ZDUMPDIR ]; then
+        mkdir -p $ZDUMPDIR
+fi
+
+## Looping Account Zimbra
+for account in `su - zimbra -c 'zmprov -l gaa | sort'`
+do
+echo "Processing mailbox $account backup..."
+        $ZMBOX -z -m $account getRestURL "//?fmt=${FORMAT}$query" > $ZDUMPDIR/$account.${FORMAT}
+done
+
+echo "Zimbra Mailbox backup has been completed successfully."
+Note : The above script has 3 method backup. First backup by few days ago. Second backup by certain date and third backup based on from/to certain date. Don’t forget to remove # 1 of 3 method what do you want. Save the script and give execution access
+
+view sourceprint?
+1.
+chmod +x /srv/backup-mailbox.sh
+2.
+sh /srv/backup-mailbox.sh
+If you want to execute every night, you can place the script in the crontab for automatically execute
+
+Good luck and hopefully useful 😀
